@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.pqfingerprintsigner">
 
+    <uses-permission android:name="android.permission.USE_FINGERPRINT" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -16,6 +18,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".FilesActivity"
+            android:label="@string/title_activity_files"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
 </manifest>
