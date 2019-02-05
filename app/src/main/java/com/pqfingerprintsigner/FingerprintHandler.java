@@ -11,7 +11,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.widget.TextView;
 
-
 /**
  * Created by lubor on 3. 2. 2019.
  */
