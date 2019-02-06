@@ -10,25 +10,36 @@ import android.os.CancellationSignal;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import java.util.Base64;
+
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
 
 /**
  * Created by lubor on 3. 2. 2019.
  */
 
-public class FingerprintHandler extends FingerprintManager.AuthenticationCallback
+public class FingerprintCommandHandler extends FingerprintManager.AuthenticationCallback
 {
     private Context context;
+    private FingerprintManager.CryptoObject fingerprintCryptoObject;
+    private SecretKey fingerprintKey;
 
-    public FingerprintHandler(Context mContext) {
+    public FingerprintCommandHandler(Context mContext) {
         context = mContext;
     }
 
-    public void startAuth(FingerprintManager manager, FingerprintManager.CryptoObject cryptoObject) {
+    public void startAuth(FingerprintManager manager, FingerprintManager.CryptoObject cryptoObject, SecretKey key) {
         CancellationSignal cancellationSignal = new CancellationSignal();
 
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.USE_FINGERPRINT) != PackageManager.PERMISSION_GRANTED) {
             return;
         }
+
+        fingerprintCryptoObject = cryptoObject;
+        fingerprintKey = key;
 
         manager.authenticate(cryptoObject, cancellationSignal, 0, this, null);
     }
@@ -52,8 +63,8 @@ public class FingerprintHandler extends FingerprintManager.AuthenticationCallbac
     public void onAuthenticationSucceeded(FingerprintManager.AuthenticationResult result) {
         this.update("Fingerprint Authentication succeeded.", true);
 
-        Intent i = new Intent(context, FilesActivity.class); //Replace HomeActivity with the name of your activity
-        context.startActivity(i);
+        Intent intent = new Intent(context, FilesActivity.class);
+        context.startActivity(intent);
     }
 
     public void update(String e, Boolean success){

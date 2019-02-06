@@ -42,6 +42,7 @@ public class MainActivity extends AppCompatActivity
 
     //Cipher details
     private Cipher cipher;
+    private SecretKey key;
 
     //Error info at intro activity
     private TextView errorText;
@@ -82,12 +83,22 @@ public class MainActivity extends AppCompatActivity
                         errorText.setText("Lock screen security not enabled in Settings!");
                     }
                     else {
-                        generateKey();
+                        try {
+                            keyStore = KeyStore.getInstance("AndroidKeyStore");
+                            keyStore.load(null);
+
+                            //First time started app = the key is not exists in keystore
+                            if(!keyStore.containsAlias(KEY_NAME)) {
+                                generateKey();
+                            }
+                        } catch (IOException | NoSuchAlgorithmException | CertificateException | KeyStoreException e) {
+                            e.printStackTrace();
+                        }
 
                         if (cipherInit()) {
                             FingerprintManager.CryptoObject cryptoObject = new FingerprintManager.CryptoObject(cipher);
-                            FingerprintHandler helper = new FingerprintHandler(this);
-                            helper.startAuth(fingerprintManager, cryptoObject);
+                            FingerprintCommandHandler helper = new FingerprintCommandHandler(this);
+                            helper.startAuth(fingerprintManager, cryptoObject, key);
                         }
                     }
                 }
@@ -97,38 +108,28 @@ public class MainActivity extends AppCompatActivity
 
     @TargetApi(Build.VERSION_CODES.M)
     protected void generateKey() {
-        try {
-            keyStore = KeyStore.getInstance("AndroidKeyStore");
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("Failed to get AndroidKeyStore instance", e);
-        }
-
         KeyGenerator keyGenerator;
         try {
             keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore");
         }
         catch (NoSuchAlgorithmException | NoSuchProviderException e) {
             e.printStackTrace();
-            throw new RuntimeException("Failed to get KeyGenerator instance", e);
+            throw new RuntimeException("Failed to get KeyGenerator instance!", e);
         }
 
         try {
-            keyStore.load(null);
-
             keyGenerator.init(
                     new KeyGenParameterSpec.Builder(KEY_NAME, KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
                     .setBlockModes(KeyProperties.BLOCK_MODE_CBC)
                     .setUserAuthenticationRequired(true)
                     .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
-                    .setKeySize(256) //TODO: CHANGE THIS TO 256-bit
+                    .setKeySize(256)
                     .build()
             );
 
             keyGenerator.generateKey();
         }
-        catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException | CertificateException | IOException e) {
+        catch (InvalidAlgorithmParameterException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
@@ -140,12 +141,11 @@ public class MainActivity extends AppCompatActivity
             cipher = Cipher.getInstance(KeyProperties.KEY_ALGORITHM_AES + "/" + KeyProperties.BLOCK_MODE_CBC + "/" + KeyProperties.ENCRYPTION_PADDING_PKCS7);
         }
         catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
-            throw new RuntimeException("Failed to get Cipher", e);
+            throw new RuntimeException("Failed to get Cipher!", e);
         }
 
         try {
-            keyStore.load(null);
-            SecretKey key = (SecretKey) keyStore.getKey(KEY_NAME, null);
+            key = (SecretKey) keyStore.getKey(KEY_NAME, null);
             cipher.init(Cipher.ENCRYPT_MODE, key);
 
             return true;
@@ -153,9 +153,13 @@ public class MainActivity extends AppCompatActivity
         catch (KeyPermanentlyInvalidatedException e) {
             return false;
         }
-        catch (KeyStoreException | CertificateException | UnrecoverableKeyException | IOException | NoSuchAlgorithmException | InvalidKeyException e) {
+        catch (KeyStoreException | UnrecoverableKeyException | NoSuchAlgorithmException | InvalidKeyException e) {
             e.printStackTrace();
-            throw new RuntimeException("Failed to init Cipher", e);
+            throw new RuntimeException("Failed to init Cipher!", e);
         }
+    }
+
+    public static String getKeyName() {
+        return KEY_NAME;
     }
 }
