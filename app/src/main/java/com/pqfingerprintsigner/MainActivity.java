@@ -38,11 +38,16 @@ public class MainActivity extends AppCompatActivity
 {
     //Key details
     private KeyStore keyStore;
+
     private static final String KEY_NAME = "SPHINCS";
+//    private static final String KEY_NAME = "SPHINCS_AES256_PKCS7";
+//
+//    private static final String KEY_NAME = "SPHINCS_AES128_PKCS5";
+//    private static final String KEY_NAME = "SPHINCS_AES256_PKCS5";
 
     //Cipher details
     private Cipher cipher;
-    private SecretKey key;
+//    private SecretKey key;
 
     //Error info at intro activity
     private TextView errorText;
@@ -83,22 +88,32 @@ public class MainActivity extends AppCompatActivity
                         errorText.setText("Lock screen security not enabled in Settings!");
                     }
                     else {
-                        try {
-                            keyStore = KeyStore.getInstance("AndroidKeyStore");
-                            keyStore.load(null);
+//                        try {
+//                            keyStore = KeyStore.getInstance("AndroidKeyStore");
+//                            keyStore.load(null);
+//
+//                            //First time started app = the key is not exists in keystore
+//                            if(!keyStore.containsAlias(KEY_NAME)) {
+//                                generateKey();
+//                            }
+//                        }
+//                        catch (IOException | NoSuchAlgorithmException | CertificateException | KeyStoreException e) {
+//                            e.printStackTrace();
+//                        }
 
-                            //First time started app = the key is not exists in keystore
-                            if(!keyStore.containsAlias(KEY_NAME)) {
-                                generateKey();
-                            }
-                        } catch (IOException | NoSuchAlgorithmException | CertificateException | KeyStoreException e) {
-                            e.printStackTrace();
-                        }
+//                        try {
+//                            keyStore.deleteEntry(KEY_NAME);
+//                            return;
+//                        } catch (KeyStoreException e) {
+//                            e.printStackTrace();
+//                        }
+
+                        generateKey();
 
                         if (cipherInit()) {
                             FingerprintManager.CryptoObject cryptoObject = new FingerprintManager.CryptoObject(cipher);
                             FingerprintCommandHandler helper = new FingerprintCommandHandler(this);
-                            helper.startAuth(fingerprintManager, cryptoObject, key);
+                            helper.startAuth(fingerprintManager, cryptoObject, null);
                         }
                     }
                 }
@@ -108,30 +123,30 @@ public class MainActivity extends AppCompatActivity
 
     @TargetApi(Build.VERSION_CODES.M)
     protected void generateKey() {
-        KeyGenerator keyGenerator;
         try {
+            keyStore = KeyStore.getInstance("AndroidKeyStore");
+
+            KeyGenerator keyGenerator;
             keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore");
+
+            keyStore.load(null);
+
+            if(!keyStore.containsAlias(KEY_NAME)) {
+                keyGenerator.init(
+                        new KeyGenParameterSpec.Builder(KEY_NAME, KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
+                                .setBlockModes(KeyProperties.BLOCK_MODE_CBC)
+                                .setUserAuthenticationRequired(true)
+                                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
+//                                .setKeySize(128) //TODO: do for 256
+                                .build()
+                );
+
+                keyGenerator.generateKey();
+            }
         }
-        catch (NoSuchAlgorithmException | NoSuchProviderException e) {
+        catch (NoSuchAlgorithmException | NoSuchProviderException | KeyStoreException | IOException | CertificateException | InvalidAlgorithmParameterException e) {
             e.printStackTrace();
             throw new RuntimeException("Failed to get KeyGenerator instance!", e);
-        }
-
-        try {
-            keyGenerator.init(
-                    new KeyGenParameterSpec.Builder(KEY_NAME, KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
-                    .setBlockModes(KeyProperties.BLOCK_MODE_CBC)
-                    .setUserAuthenticationRequired(true)
-                    .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
-                    .setKeySize(256)
-                    .build()
-            );
-
-            keyGenerator.generateKey();
-        }
-        catch (InvalidAlgorithmParameterException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
         }
     }
 
@@ -145,12 +160,13 @@ public class MainActivity extends AppCompatActivity
         }
 
         try {
-            key = (SecretKey) keyStore.getKey(KEY_NAME, null);
+            keyStore.load(null);
+            SecretKey key = (SecretKey) keyStore.getKey(KEY_NAME, null);
             cipher.init(Cipher.ENCRYPT_MODE, key);
 
             return true;
         }
-        catch (KeyPermanentlyInvalidatedException e) {
+        catch (KeyPermanentlyInvalidatedException | IOException | CertificateException e) {
             return false;
         }
         catch (KeyStoreException | UnrecoverableKeyException | NoSuchAlgorithmException | InvalidKeyException e) {
