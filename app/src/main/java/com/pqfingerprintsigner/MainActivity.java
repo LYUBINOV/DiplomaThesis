@@ -88,9 +88,9 @@ public class MainActivity extends AppCompatActivity
                             keyStore.load(null);
 
                             //First time started app = the key is not exists in keystore
-                            if(!keyStore.containsAlias(KEY_NAME)) {
+//                            if(!keyStore.containsAlias(KEY_NAME)) {
                                 generateKey();
-                            }
+//                            }
                         } catch (IOException | NoSuchAlgorithmException | CertificateException | KeyStoreException e) {
                             e.printStackTrace();
                         }
@@ -121,7 +121,7 @@ public class MainActivity extends AppCompatActivity
             keyGenerator.init(
                     new KeyGenParameterSpec.Builder(KEY_NAME, KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
                     .setBlockModes(KeyProperties.BLOCK_MODE_CBC)
-                    .setUserAuthenticationRequired(true)
+                    .setUserAuthenticationRequired(false)
                     .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
                     .setKeySize(256)
                     .build()

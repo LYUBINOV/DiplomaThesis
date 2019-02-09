@@ -10,8 +10,8 @@ public class DBCommandHandler extends SQLiteOpenHelper {
     public static final String DATABASE_NAME = "PQCryptoSigner.db";
     public static final String CONTACTS_TABLE_NAME = "SPHINCS_KEYS";
     public static final String COLUMN_ID = "id";
-    public static final String COLUMN_PUBLIC_KEY = "publicKey";
-    public static final String COLUMN_PRIVATE_KEY = "privateKey";
+    public static final String COLUMN_PUBLIC_PRIVATE_KEYS = "publicKey_privateKey";
+//    public static final String COLUMN_PRIVATE_KEY = "privateKey";
     public static final String COLUMN_INITIALIZATION_VECTOR = "initializationVector";
 
     public DBCommandHandler(Context context) {
@@ -20,7 +20,7 @@ public class DBCommandHandler extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL("create table SPHINCS_KEYS (id integer primary key, publicKey text,privateKey text, initializationVector text)");
+        db.execSQL("create table SPHINCS_KEYS (id integer primary key, publicKey_privateKey text, initializationVector text)");
     }
 
     @Override
@@ -29,16 +29,16 @@ public class DBCommandHandler extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    public boolean insertSphincsKeys(String publicKey, String privateKey, String initializationVector) {
+    public boolean insertSphincsKeys(String publicKey_privateKey, String initializationVector) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues contentValues = new ContentValues();
         contentValues.put("id", 0);
-        contentValues.put("publicKey", publicKey);
-        contentValues.put("privateKey", privateKey);
+        contentValues.put("publicKey_privateKey", publicKey_privateKey);
+//        contentValues.put("privateKey", privateKey);
         contentValues.put("initializationVector", initializationVector);
 
-        db.insert("notes", null, contentValues);
+        db.insert("SPHINCS_KEYS", null, contentValues);
 
         return true;
     }
@@ -50,10 +50,10 @@ public class DBCommandHandler extends SQLiteOpenHelper {
         return res;
     }
 
-    public boolean regenerateSphincsKeys(Integer id, String publicKey, String privateKey, String initializationVector) {
+    public boolean regenerateSphincsKeys(Integer id, String publicKey_privateKey, String initializationVector) {
         ContentValues contentValues = new ContentValues();
-        contentValues.put("publicKey", publicKey);
-        contentValues.put("privateKey", privateKey);
+        contentValues.put("publicKey_privateKey", publicKey_privateKey);
+//        contentValues.put("privateKey", privateKey);
         contentValues.put("initializationVector", initializationVector);
 
         SQLiteDatabase db = this.getWritableDatabase();

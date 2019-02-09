@@ -24,8 +24,8 @@ import javax.crypto.SecretKey;
 public class FingerprintCommandHandler extends FingerprintManager.AuthenticationCallback
 {
     private Context context;
-    private FingerprintManager.CryptoObject fingerprintCryptoObject;
-    private SecretKey fingerprintKey;
+    private static FingerprintManager.CryptoObject fingerprintCryptoObject;
+    private static SecretKey fingerprintKey;
 
     public FingerprintCommandHandler(Context mContext) {
         context = mContext;
@@ -74,5 +74,13 @@ public class FingerprintCommandHandler extends FingerprintManager.Authentication
         if(success){
             textView.setTextColor(ContextCompat.getColor(context,R.color.colorPrimaryDark));
         }
+    }
+
+    public static FingerprintManager.CryptoObject getFingerprintCryptoObject() {
+        return fingerprintCryptoObject;
+    }
+
+    public static SecretKey getFingerprintKey() {
+        return fingerprintKey;
     }
 }
