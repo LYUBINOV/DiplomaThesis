@@ -9,6 +9,15 @@ import android.support.v7.widget.Toolbar;
 import android.util.Base64;
 import android.widget.Toast;
 
+import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
+import org.bouncycastle.crypto.digests.SHA3Digest;
+import org.bouncycastle.pqc.crypto.MessageSigner;
+import org.bouncycastle.pqc.crypto.sphincs.SPHINCS256KeyGenerationParameters;
+import org.bouncycastle.pqc.crypto.sphincs.SPHINCS256KeyPairGenerator;
+import org.bouncycastle.pqc.crypto.sphincs.SPHINCS256Signer;
+import org.bouncycastle.pqc.crypto.sphincs.SPHINCSPrivateKeyParameters;
+import org.bouncycastle.pqc.crypto.sphincs.SPHINCSPublicKeyParameters;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidAlgorithmParameterException;
@@ -16,6 +25,7 @@ import java.security.InvalidKeyException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 
@@ -98,6 +108,27 @@ public class FilesActivity extends AppCompatActivity {
             } catch (IllegalBlockSizeException | BadPaddingException e) {
                 e.printStackTrace();
             }
+
+            //*******************************
+            //SPHINCS TESTING - implementacia https://github.com/bcgit/bc-java/tree/master/core/src/main/java/org/bouncycastle/pqc/crypto/sphincs
+            SPHINCS256KeyPairGenerator generator = new SPHINCS256KeyPairGenerator();
+            generator.init(new SPHINCS256KeyGenerationParameters(new SecureRandom(), new SHA3Digest(256)));
+
+            AsymmetricCipherKeyPair kp = generator.generateKeyPair();
+            SPHINCSPrivateKeyParameters priv = (SPHINCSPrivateKeyParameters)kp.getPrivate(); //priv.getKeyData() for get key bytes to save to db
+            SPHINCSPublicKeyParameters pub = (SPHINCSPublicKeyParameters)kp.getPublic();
+
+                                /**
+                                 * Base constructor.
+                                 *
+                                 * @param firstHash  must produce 32 bytes of output - used for tree construction.
+                                 * @param secondHash must produce 64 bytes of output - used for initial message/key/seed hashing.
+                                 */
+            MessageSigner sphincsSigner = new SPHINCS256Signer(new SHA3Digest(256), new SHA3Digest(512)); https://github.com/bcgit/bc-java/tree/master/core/src/main/java/org/bouncycastle/pqc/crypto
+            sphincsSigner.init(true, priv);
+            byte[] signature = sphincsSigner.generateSignature("helloWorld".getBytes());
+            sphincsSigner.init(false, pub);
+            System.out.println(sphincsSigner.verifySignature("helloWorldq".getBytes(), signature));
         }
 //        else if(cursor.getCount() == 1) {
 //            Toast.makeText(getApplicationContext(), "SPHINCS keys unlocked.", Toast.LENGTH_LONG).show();
