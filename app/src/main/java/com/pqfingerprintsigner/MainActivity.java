@@ -3,17 +3,24 @@ package com.pqfingerprintsigner;
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.KeyguardManager;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.fingerprint.FingerprintManager;
 import android.os.Build;
+import android.os.Environment;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.security.keystore.KeyProperties;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 
+import java.io.File;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -23,6 +30,9 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 import javax.crypto.Cipher;
@@ -47,17 +57,61 @@ public class MainActivity extends AppCompatActivity
     //Error info at intro activity
     private TextView errorText;
 
+    //PDF files map
+    private Map<String, String> pdfFiles;
+    private ListView listPdfsView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        errorText = (TextView) findViewById(R.id.errorText);
+//        errorText = (TextView) findViewById(R.id.errorText);
 
         //Init check
-        checkPermissions();
+//        checkPermissions();
+
+        listFiles();
+        listPdfsView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String pathToChosenItem = pdfFiles.get((String) parent.getItemAtPosition(position).toString());
+
+                Intent intent = new Intent(MainActivity.this, PDFViewActivity.class);
+
+                intent.putExtra("filePath", pathToChosenItem);
+                startActivity(intent);
+            }
+        });
     }
 
+    protected void listFiles() {
+        pdfFiles = new HashMap<>();
+        searchPdfs(new File(Environment.getExternalStorageDirectory().getAbsolutePath()));
+
+        ArrayAdapter adapter = new ArrayAdapter<String>(this, R.layout.listview_format, new ArrayList<>(pdfFiles.keySet()));
+
+        listPdfsView = (ListView) findViewById(R.id.mobile_list);
+        listPdfsView.setAdapter(adapter);
+    }
+
+    public void searchPdfs(File dir) {
+        String pdfPattern = ".pdf";
+        File fileList[] = dir.listFiles();
+
+        if (fileList != null) {
+            for (int i = 0; i < fileList.length; i++) {
+                if (fileList[i].isDirectory()) {
+                    searchPdfs(fileList[i]);
+                }
+                else if (fileList[i].getName().endsWith(pdfPattern)) {
+                    pdfFiles.put(fileList[i].getName(), fileList[i].getAbsolutePath());
+                }
+            }
+        }
+    }
+
+    //*************************************************************************************************
     //Init check
     protected void checkPermissions() {
         KeyguardManager keyguardManager = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);

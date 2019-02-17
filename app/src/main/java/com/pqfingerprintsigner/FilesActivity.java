@@ -46,6 +46,11 @@ public class FilesActivity extends AppCompatActivity {
     private SecretKey key;
     private KeyStore keyStore;
 
+    //pdf view video
+    //https://www.youtube.com/watch?v=99fuDgyAmGs
+
+    //list all pdf
+    //https://stackoverflow.com/questions/31652173/how-to-list-all-pdf-files-in-my-android-device
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -69,7 +74,8 @@ public class FilesActivity extends AppCompatActivity {
             keyStore.load(null);
 
             key = (SecretKey) keyStore.getKey(MainActivity.getKeyName(), null);
-        } catch (NoSuchAlgorithmException   | NoSuchPaddingException |
+        }
+        catch (NoSuchAlgorithmException   | NoSuchPaddingException |
                  KeyStoreException          | IOException |
                  CertificateException       | UnrecoverableKeyException e) {
             e.printStackTrace();
@@ -118,12 +124,6 @@ public class FilesActivity extends AppCompatActivity {
             SPHINCSPrivateKeyParameters priv = (SPHINCSPrivateKeyParameters)kp.getPrivate(); //priv.getKeyData() for get key bytes to save to db
             SPHINCSPublicKeyParameters pub = (SPHINCSPublicKeyParameters)kp.getPublic();
 
-                                /**
-                                 * Base constructor.
-                                 *
-                                 * @param firstHash  must produce 32 bytes of output - used for tree construction.
-                                 * @param secondHash must produce 64 bytes of output - used for initial message/key/seed hashing.
-                                 */
             MessageSigner sphincsSigner = new SPHINCS256Signer(new SHA3Digest(256), new SHA3Digest(512)); https://github.com/bcgit/bc-java/tree/master/core/src/main/java/org/bouncycastle/pqc/crypto
             sphincsSigner.init(true, priv);
             byte[] signature = sphincsSigner.generateSignature("helloWorld".getBytes());

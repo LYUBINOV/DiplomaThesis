@@ -69,6 +69,7 @@ public class FingerprintCommandHandler extends FingerprintManager.Authentication
 
     public void update(String e, Boolean success){
         TextView textView = (TextView) ((Activity)context).findViewById(R.id.errorText);
+
         textView.setText(e);
 
         if(success){
