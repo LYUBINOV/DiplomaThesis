@@ -4,5 +4,5 @@
     <string name="desc_fingerprint">Please place your finger on the scanner to verify your identity</string>
     <string name="activity_home_desc">You have successfully logged in with fingerprint authentication</string>
     <string name="title_activity_files">FilesActivity</string>
-    <string name="title_activity_pdfview">PDFViewActivity</string>
+    <string name="title_activity_pdfview">Sign document</string>
 </resources>

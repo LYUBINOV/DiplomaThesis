@@ -14,8 +14,7 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".PDFViewActivity"
-            android:label="@string/title_activity_pdfview"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:label="@string/title_activity_pdfview"></activity>
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
