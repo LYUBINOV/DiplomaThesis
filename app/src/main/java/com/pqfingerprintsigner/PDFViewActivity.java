@@ -1,11 +1,14 @@
 package com.pqfingerprintsigner;
 
+import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.Toast;
+
 import com.github.barteksc.pdfviewer.PDFView;
 import java.io.File;
 
@@ -30,12 +33,18 @@ public class PDFViewActivity extends AppCompatActivity
         return true;
     }
 
+    /**
+     * This metode is just for toolbar
+     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.signer:
-                Toast.makeText(getApplicationContext(), "Sign button clicked!", Toast.LENGTH_LONG).show();
-                //TODO: tu zavolat nieco ako startAuth()
+                //Toast.makeText(getApplicationContext(), "Sign button clicked!", Toast.LENGTH_LONG).show();
+
+                Intent intent = new Intent(PDFViewActivity.this, FingerprintActivity.class);
+                intent.putExtra("filePath", getIntent().getStringExtra("filePath"));
+                startActivity(intent);
 
             default:
                 return super.onOptionsItemSelected(item);

@@ -11,7 +11,6 @@ public class DBCommandHandler extends SQLiteOpenHelper {
     public static final String CONTACTS_TABLE_NAME = "SPHINCS_KEYS";
     public static final String COLUMN_ID = "id";
     public static final String COLUMN_PUBLIC_PRIVATE_KEYS = "publicKey_privateKey";
-//    public static final String COLUMN_PRIVATE_KEY = "privateKey";
     public static final String COLUMN_INITIALIZATION_VECTOR = "initializationVector";
 
     public DBCommandHandler(Context context) {
@@ -33,12 +32,11 @@ public class DBCommandHandler extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues contentValues = new ContentValues();
-        contentValues.put("id", 0);
-        contentValues.put("publicKey_privateKey", publicKey_privateKey);
-//        contentValues.put("privateKey", privateKey);
-        contentValues.put("initializationVector", initializationVector);
+        contentValues.put(this.COLUMN_ID, 0);
+        contentValues.put(this.COLUMN_PUBLIC_PRIVATE_KEYS, publicKey_privateKey);
+        contentValues.put(this.COLUMN_INITIALIZATION_VECTOR, initializationVector);
 
-        db.insert("SPHINCS_KEYS", null, contentValues);
+        db.insert(this.CONTACTS_TABLE_NAME, null, contentValues);
 
         return true;
     }
@@ -52,12 +50,11 @@ public class DBCommandHandler extends SQLiteOpenHelper {
 
     public boolean regenerateSphincsKeys(Integer id, String publicKey_privateKey, String initializationVector) {
         ContentValues contentValues = new ContentValues();
-        contentValues.put("publicKey_privateKey", publicKey_privateKey);
-//        contentValues.put("privateKey", privateKey);
-        contentValues.put("initializationVector", initializationVector);
+        contentValues.put(this.COLUMN_PUBLIC_PRIVATE_KEYS, publicKey_privateKey);
+        contentValues.put(this.COLUMN_INITIALIZATION_VECTOR, initializationVector);
 
         SQLiteDatabase db = this.getWritableDatabase();
-        db.update("SPHINCS_KEYS", contentValues, "id = ? ", new String[]{Integer.toString(id)});
+        db.update(this.DATABASE_NAME, contentValues, "id = ? ", new String[]{Integer.toString(id)});
 
         return true;
     }

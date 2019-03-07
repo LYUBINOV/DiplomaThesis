@@ -10,11 +10,9 @@ import android.os.CancellationSignal;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import java.util.Base64;
+import java.io.File;
 
-import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 
 /**
@@ -26,12 +24,13 @@ public class FingerprintCommandHandler extends FingerprintManager.Authentication
     private Context context;
     private static FingerprintManager.CryptoObject fingerprintCryptoObject;
     private static SecretKey fingerprintKey;
+    private File targetFile;
 
     public FingerprintCommandHandler(Context mContext) {
         context = mContext;
     }
 
-    public void startAuth(FingerprintManager manager, FingerprintManager.CryptoObject cryptoObject, SecretKey key) {
+    public void startAuth(FingerprintManager manager, FingerprintManager.CryptoObject cryptoObject, SecretKey key, File targetFile) {
         CancellationSignal cancellationSignal = new CancellationSignal();
 
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.USE_FINGERPRINT) != PackageManager.PERMISSION_GRANTED) {
@@ -40,6 +39,8 @@ public class FingerprintCommandHandler extends FingerprintManager.Authentication
 
         fingerprintCryptoObject = cryptoObject;
         fingerprintKey = key;
+
+        this.targetFile = targetFile;
 
         manager.authenticate(cryptoObject, cancellationSignal, 0, this, null);
     }
@@ -63,8 +64,8 @@ public class FingerprintCommandHandler extends FingerprintManager.Authentication
     public void onAuthenticationSucceeded(FingerprintManager.AuthenticationResult result) {
         this.update("Fingerprint Authentication succeeded.", true);
 
-        Intent intent = new Intent(context, FilesActivity.class);
-        context.startActivity(intent);
+        //TODO: tunak implementovat nahranie na server
+        signDocument();
     }
 
     public void update(String e, Boolean success){
@@ -83,5 +84,12 @@ public class FingerprintCommandHandler extends FingerprintManager.Authentication
 
     public static SecretKey getFingerprintKey() {
         return fingerprintKey;
+    }
+
+    private void signDocument() {
+        ServerCommandHandler serverCommandHandler = new ServerCommandHandler();
+
+        serverCommandHandler.getDatabaseCursor(context); //Init
+        serverCommandHandler.checkGeneratedKeysInDatabase(context, this.targetFile);
     }
 }

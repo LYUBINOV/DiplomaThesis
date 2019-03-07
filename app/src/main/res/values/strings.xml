@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">PQFingerPrint Signer</string>
-    <string name="title_fingerprint">One-touch to Sign In</string>
-    <string name="desc_fingerprint">Please place your finger on the scanner to verify your identity</string>
+    <string name="title_fingerprint">One-touch to Sign Document</string>
+    <string name="desc_fingerprint">Please place your finger on the scanner to verify your identity and sign selected document</string>
     <string name="activity_home_desc">You have successfully logged in with fingerprint authentication</string>
     <string name="title_activity_files">FilesActivity</string>
     <string name="title_activity_pdfview">Sign document</string>
