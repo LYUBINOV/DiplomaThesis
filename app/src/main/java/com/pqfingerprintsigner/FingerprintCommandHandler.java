@@ -64,7 +64,7 @@ public class FingerprintCommandHandler extends FingerprintManager.Authentication
     public void onAuthenticationSucceeded(FingerprintManager.AuthenticationResult result) {
         this.update("Fingerprint Authentication succeeded.", true);
 
-        //TODO: tunak implementovat nahranie na server
+        //WF: wf po prilozeni prsta
         signDocument();
     }
 
