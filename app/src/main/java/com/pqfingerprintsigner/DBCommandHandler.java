@@ -10,7 +10,8 @@ public class DBCommandHandler extends SQLiteOpenHelper {
     public static final String DATABASE_NAME = "PQCryptoSigner.db";
     public static final String CONTACTS_TABLE_NAME = "SPHINCS_KEYS";
     public static final String COLUMN_ID = "id";
-    public static final String COLUMN_PUBLIC_PRIVATE_KEYS = "publicKey_privateKey";
+    public static final String COLUMN_PUBLIC_KEY = "publicKey";
+    public static final String COLUMN_PRIVATE_KEY = "privateKey";
     public static final String COLUMN_INITIALIZATION_VECTOR = "initializationVector";
 
     public DBCommandHandler(Context context) {
@@ -19,7 +20,7 @@ public class DBCommandHandler extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL("create table SPHINCS_KEYS (id integer primary key, publicKey_privateKey text, initializationVector text)");
+        db.execSQL("create table SPHINCS_KEYS (id integer primary key, publicKey text, privateKey text, initializationVector text)");
     }
 
     @Override
@@ -28,12 +29,13 @@ public class DBCommandHandler extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    public boolean insertSphincsKeys(String publicKey_privateKey, String initializationVector) {
+    public boolean insertSphincsKeys(String publicKey, String privateKey, String initializationVector) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues contentValues = new ContentValues();
         contentValues.put(this.COLUMN_ID, 0);
-        contentValues.put(this.COLUMN_PUBLIC_PRIVATE_KEYS, publicKey_privateKey);
+        contentValues.put(this.COLUMN_PUBLIC_KEY, publicKey);
+        contentValues.put(this.COLUMN_PRIVATE_KEY, privateKey);
         contentValues.put(this.COLUMN_INITIALIZATION_VECTOR, initializationVector);
 
         db.insert(this.CONTACTS_TABLE_NAME, null, contentValues);
@@ -48,9 +50,10 @@ public class DBCommandHandler extends SQLiteOpenHelper {
         return res;
     }
 
-    public boolean regenerateSphincsKeys(Integer id, String publicKey_privateKey, String initializationVector) {
+    public boolean regenerateSphincsKeys(Integer id, String publicKey, String privateKey, String initializationVector) {
         ContentValues contentValues = new ContentValues();
-        contentValues.put(this.COLUMN_PUBLIC_PRIVATE_KEYS, publicKey_privateKey);
+        contentValues.put(this.COLUMN_PUBLIC_KEY, publicKey);
+        contentValues.put(this.COLUMN_PRIVATE_KEY, privateKey);
         contentValues.put(this.COLUMN_INITIALIZATION_VECTOR, initializationVector);
 
         SQLiteDatabase db = this.getWritableDatabase();

@@ -13,6 +13,7 @@ import org.bouncycastle.pqc.crypto.sphincs.SPHINCS256KeyPairGenerator;
 import org.bouncycastle.pqc.crypto.sphincs.SPHINCS256Signer;
 import org.bouncycastle.pqc.crypto.sphincs.SPHINCSPrivateKeyParameters;
 import org.bouncycastle.pqc.crypto.sphincs.SPHINCSPublicKeyParameters;
+import org.bouncycastle.util.encoders.Base64;
 import org.json.JSONObject;
 
 import java.io.DataOutputStream;
@@ -56,21 +57,14 @@ public class ServerCommandHandler {
             try {
                 //KeyEnc
                 Cipher cipher = FingerprintCommandHandler.getFingerprintCryptoObject().getCipher();
-
-                String concatPubPrivKeys = Base64.toBase64String(sphincsKeysDatas.get("publicKey"))
-                                         + " "
-                                         + Base64.toBase64String(sphincsKeysDatas.get("privateKey"));
-
-                byte[] pub_privKeysEncrypted = cipher.doFinal(Base64.decode(concatPubPrivKeys));
-                Toast.makeText(context, "SPHINCS keys were encrypted!", Toast.LENGTH_LONG).show();
-
-                //TODO: takto treba encodovat + decodovat stringy do db, tak isto aj na servery asi posielat/prijimat
-//                String str = Base64.toBase64String(cipher.getIV());
-//                byte[] bt = Base64.decode(str);
-
+                //47 -99 70...... 102 109 33 = 1088bytes
+                byte[] privKeyEncrypted = cipher.doFinal(sphincsKeysDatas.get("privateKey"));
+                Toast.makeText(context, "SPHINCS key was encrypted!", Toast.LENGTH_LONG).show();
 
                 //KeyInsert
-                this.dbCommandHandler.insertSphincsKeys(Base64.toBase64String(pub_privKeysEncrypted), Base64.toBase64String(cipher.getIV()));
+                this.dbCommandHandler.insertSphincsKeys(Base64.toBase64String(sphincsKeysDatas.get("publicKey")),
+                                                        Base64.toBase64String(privKeyEncrypted),
+                                                        Base64.toBase64String(cipher.getIV()));
                 Toast.makeText(context, "SPHINCS keys were inserted to database!", Toast.LENGTH_LONG).show();
 
                 //Sign and send
@@ -89,7 +83,8 @@ public class ServerCommandHandler {
             dbCursor.moveToFirst();
 
             //KeyGet
-            String pub_privKeysEnc = this.dbCursor.getString(this.dbCursor.getColumnIndex(DBCommandHandler.COLUMN_PUBLIC_PRIVATE_KEYS));
+            String privKeyEnc = this.dbCursor.getString(this.dbCursor.getColumnIndex(DBCommandHandler.COLUMN_PRIVATE_KEY));
+            String pubKey = this.dbCursor.getString(this.dbCursor.getColumnIndex(DBCommandHandler.COLUMN_PUBLIC_KEY));
             String iv = this.dbCursor.getString(this.dbCursor.getColumnIndex(DBCommandHandler.COLUMN_INITIALIZATION_VECTOR));
             Toast.makeText(context, "SPHINCS keys were obtained!", Toast.LENGTH_LONG).show();
 
@@ -104,14 +99,11 @@ public class ServerCommandHandler {
 
                 cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(Base64.decode(iv)));
 
-                byte[] decryptedPub_Priv = cipher.doFinal(Base64.decode(pub_privKeysEnc));
-                String[] pub_privKeys = Base64.toBase64String(decryptedPub_Priv).split(" ");
-                String publicKey = pub_privKeys[0];
-                String privateKey = pub_privKeys[0];
+                byte[] decryptedPrivKey = cipher.doFinal(Base64.decode(privKeyEnc));
                 Toast.makeText(context, "SPHINCS keys were decrypted!", Toast.LENGTH_LONG).show();
 
                 //Sign and send
-                if(signAndSend(Base64.decode(publicKey), Base64.decode(privateKey), this.fullyReadFileToBytes(targetFile))) {
+                if(signAndSend(Base64.decode(pubKey), decryptedPrivKey, this.fullyReadFileToBytes(targetFile))) {
                     Toast.makeText(context, "Document was signed!", Toast.LENGTH_LONG).show();
                 }
                 else {
@@ -152,7 +144,7 @@ public class ServerCommandHandler {
             sphincsSigner.init(true, privateKey);
             byte[] signature = sphincsSigner.generateSignature(document);
 
-            this.sendPost(new String(_publicKey), new String(signature), new String(document));
+            this.sendPost(Base64.toBase64String(_publicKey), Base64.toBase64String(signature), Base64.toBase64String(document));
 
             return true;
         }
