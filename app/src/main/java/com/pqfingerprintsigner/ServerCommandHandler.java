@@ -57,11 +57,11 @@ public class ServerCommandHandler {
                 //KeyEnc
                 Cipher cipher = FingerprintCommandHandler.getFingerprintCryptoObject().getCipher();
 
-                String concatPubPrivKeys = new String(sphincsKeysDatas.get("publicKey"))
+                String concatPubPrivKeys = Base64.toBase64String(sphincsKeysDatas.get("publicKey"))
                                          + " "
-                                         + new String(sphincsKeysDatas.get("privateKey"));
+                                         + Base64.toBase64String(sphincsKeysDatas.get("privateKey"));
 
-                byte[] pub_privKeysEncrypted = cipher.doFinal(concatPubPrivKeys.getBytes());
+                byte[] pub_privKeysEncrypted = cipher.doFinal(Base64.decode(concatPubPrivKeys));
                 Toast.makeText(context, "SPHINCS keys were encrypted!", Toast.LENGTH_LONG).show();
 
                 //TODO: takto treba encodovat + decodovat stringy do db, tak isto aj na servery asi posielat/prijimat
@@ -70,7 +70,7 @@ public class ServerCommandHandler {
 
 
                 //KeyInsert
-                this.dbCommandHandler.insertSphincsKeys(new String(pub_privKeysEncrypted), new String(cipher.getIV()));
+                this.dbCommandHandler.insertSphincsKeys(Base64.toBase64String(pub_privKeysEncrypted), Base64.toBase64String(cipher.getIV()));
                 Toast.makeText(context, "SPHINCS keys were inserted to database!", Toast.LENGTH_LONG).show();
 
                 //Sign and send
@@ -102,16 +102,16 @@ public class ServerCommandHandler {
                 Cipher cipher = FingerprintCommandHandler.getFingerprintCryptoObject().getCipher();
                 SecretKey secretKey = FingerprintCommandHandler.getFingerprintKey();
 
-                cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(iv.getBytes()));
+                cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(Base64.decode(iv)));
 
-                byte[] decryptedPub_Priv = cipher.doFinal(pub_privKeysEnc.getBytes());
-                String[] pub_privKeys = new String(decryptedPub_Priv).split(" ");
+                byte[] decryptedPub_Priv = cipher.doFinal(Base64.decode(pub_privKeysEnc));
+                String[] pub_privKeys = Base64.toBase64String(decryptedPub_Priv).split(" ");
                 String publicKey = pub_privKeys[0];
                 String privateKey = pub_privKeys[0];
                 Toast.makeText(context, "SPHINCS keys were decrypted!", Toast.LENGTH_LONG).show();
 
                 //Sign and send
-                if(signAndSend(publicKey.getBytes(), privateKey.getBytes(), this.fullyReadFileToBytes(targetFile))) {
+                if(signAndSend(Base64.decode(publicKey), Base64.decode(privateKey), this.fullyReadFileToBytes(targetFile))) {
                     Toast.makeText(context, "Document was signed!", Toast.LENGTH_LONG).show();
                 }
                 else {
