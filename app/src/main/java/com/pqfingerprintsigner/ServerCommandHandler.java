@@ -64,6 +64,11 @@ public class ServerCommandHandler {
                 byte[] pub_privKeysEncrypted = cipher.doFinal(concatPubPrivKeys.getBytes());
                 Toast.makeText(context, "SPHINCS keys were encrypted!", Toast.LENGTH_LONG).show();
 
+                //TODO: takto treba encodovat + decodovat stringy do db, tak isto aj na servery asi posielat/prijimat
+//                String str = Base64.toBase64String(cipher.getIV());
+//                byte[] bt = Base64.decode(str);
+
+
                 //KeyInsert
                 this.dbCommandHandler.insertSphincsKeys(new String(pub_privKeysEncrypted), new String(cipher.getIV()));
                 Toast.makeText(context, "SPHINCS keys were inserted to database!", Toast.LENGTH_LONG).show();
@@ -147,11 +152,6 @@ public class ServerCommandHandler {
             sphincsSigner.init(true, privateKey);
             byte[] signature = sphincsSigner.generateSignature(document);
 
-            //verif
-            //sphincsSigner.init(false, pub);
-            //System.out.println(sphincsSigner.verifySignature("helloWorldq".getBytes(), signature));
-
-            //TODO: dorobit server
             this.sendPost(new String(_publicKey), new String(signature), new String(document));
 
             return true;
@@ -210,7 +210,7 @@ public class ServerCommandHandler {
             @Override
             public void run() {
                 try {
-                    URL url = new URL("http://[ip]:[port]");
+                    URL url = new URL("http://localhost:8080/verification/check");
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                     conn.setRequestMethod("POST");
                     conn.setRequestProperty("Content-Type", "application/json;charset=UTF-8");
