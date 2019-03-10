@@ -202,7 +202,7 @@ public class ServerCommandHandler {
             @Override
             public void run() {
                 try {
-                    URL url = new URL("http://localhost:8080/verification/check");
+                    URL url = new URL("http://127.0.0.1:8080/verification/check");
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                     conn.setRequestMethod("POST");
                     conn.setRequestProperty("Content-Type", "application/json;charset=UTF-8");
