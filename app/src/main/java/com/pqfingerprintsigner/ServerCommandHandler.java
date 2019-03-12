@@ -28,6 +28,7 @@ import java.security.InvalidKeyException;
 import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -40,39 +41,43 @@ import javax.crypto.spec.IvParameterSpec;
  */
 
 public class ServerCommandHandler {
+    private Context globalContext;
+
     private DBCommandHandler dbCommandHandler;
     private Cursor dbCursor;
 
     public void getDatabaseCursor(Context context) {
         this.dbCommandHandler = new DBCommandHandler(context);
         this.dbCursor = this.dbCommandHandler.getSphincsKeys(0); //Unique ID for each key
+
+        globalContext = context;
     }
 
-    public void checkGeneratedKeysInDatabase(Context context, File targetFile) {
+    public void checkGeneratedKeysInDatabase(File targetFile) {
         if(this.dbCursor.getCount() == 0) {
             //KeyGen
             Map<String, byte[]> sphincsKeysDatas = this.generateSphincsKeys();
-            Toast.makeText(context, "SPHINCS keys were generated!", Toast.LENGTH_LONG).show();
+            Toast.makeText(globalContext, "SPHINCS keys were generated!", Toast.LENGTH_LONG).show();
 
             try {
                 //KeyEnc
                 Cipher cipher = FingerprintCommandHandler.getFingerprintCryptoObject().getCipher();
-                //47 -99 70...... 102 109 33 = 1088bytes
+
                 byte[] privKeyEncrypted = cipher.doFinal(sphincsKeysDatas.get("privateKey"));
-                Toast.makeText(context, "SPHINCS key was encrypted!", Toast.LENGTH_LONG).show();
+                Toast.makeText(globalContext, "SPHINCS key was encrypted!", Toast.LENGTH_LONG).show();
 
                 //KeyInsert
                 this.dbCommandHandler.insertSphincsKeys(Base64.toBase64String(sphincsKeysDatas.get("publicKey")),
                                                         Base64.toBase64String(privKeyEncrypted),
                                                         Base64.toBase64String(cipher.getIV()));
-                Toast.makeText(context, "SPHINCS keys were inserted to database!", Toast.LENGTH_LONG).show();
+                Toast.makeText(globalContext, "SPHINCS keys were inserted to database!", Toast.LENGTH_LONG).show();
 
                 //Sign and send
                 if (signAndSend(sphincsKeysDatas.get("publicKey"), sphincsKeysDatas.get("privateKey"), this.fullyReadFileToBytes(targetFile))) {
-                    Toast.makeText(context, "Document was signed!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(globalContext, "Document was signed!", Toast.LENGTH_LONG).show();
                 }
                 else {
-                    Toast.makeText(context, "ERROR IN SIGNING DOCUMENT WORKFLOW!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(globalContext, "ERROR IN SIGNING DOCUMENT WORKFLOW!", Toast.LENGTH_LONG).show();
                 }
             }
             catch (IllegalBlockSizeException | BadPaddingException e) {
@@ -86,7 +91,7 @@ public class ServerCommandHandler {
             String privKeyEnc = this.dbCursor.getString(this.dbCursor.getColumnIndex(DBCommandHandler.COLUMN_PRIVATE_KEY));
             String pubKey = this.dbCursor.getString(this.dbCursor.getColumnIndex(DBCommandHandler.COLUMN_PUBLIC_KEY));
             String iv = this.dbCursor.getString(this.dbCursor.getColumnIndex(DBCommandHandler.COLUMN_INITIALIZATION_VECTOR));
-            Toast.makeText(context, "SPHINCS keys were obtained!", Toast.LENGTH_LONG).show();
+            Toast.makeText(globalContext, "SPHINCS keys were obtained!", Toast.LENGTH_LONG).show();
 
             if(!this.dbCursor.isClosed()) {
                 this.dbCursor.close();
@@ -100,14 +105,14 @@ public class ServerCommandHandler {
                 cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(Base64.decode(iv)));
 
                 byte[] decryptedPrivKey = cipher.doFinal(Base64.decode(privKeyEnc));
-                Toast.makeText(context, "SPHINCS keys were decrypted!", Toast.LENGTH_LONG).show();
+                Toast.makeText(globalContext, "SPHINCS keys were decrypted!", Toast.LENGTH_LONG).show();
 
                 //Sign and send
                 if(signAndSend(Base64.decode(pubKey), decryptedPrivKey, this.fullyReadFileToBytes(targetFile))) {
-                    Toast.makeText(context, "Document was signed!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(globalContext, "Document was sent!", Toast.LENGTH_LONG).show();
                 }
                 else {
-                    Toast.makeText(context, "ERROR IN SIGNING DOCUMENT WORKFLOW!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(globalContext, "ERROR IN SIGNING DOCUMENT WORKFLOW!", Toast.LENGTH_LONG).show();
                 }
             }
             catch (InvalidKeyException | InvalidAlgorithmParameterException |
@@ -202,13 +207,16 @@ public class ServerCommandHandler {
             @Override
             public void run() {
                 try {
-                    URL url = new URL("http://127.0.0.1:8080/verification/check");
+                    URL url = new URL("http://192.168.43.35:8080/verification/check");
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+
                     conn.setRequestMethod("POST");
+
                     conn.setRequestProperty("Content-Type", "application/json;charset=UTF-8");
                     conn.setRequestProperty("Accept","application/json");
-                    conn.setDoOutput(true);
+
                     conn.setDoInput(true);
+                    conn.setDoOutput(true);
 
                     JSONObject jsonParam = new JSONObject();
                     jsonParam.put("publicKey", publicKey);
@@ -218,11 +226,14 @@ public class ServerCommandHandler {
                     Log.i("JSON", jsonParam.toString());
 
                     DataOutputStream os = new DataOutputStream(conn.getOutputStream());
-                    //os.writeBytes(URLEncoder.encode(jsonParam.toString(), "UTF-8"));
                     os.writeBytes(jsonParam.toString());
 
                     os.flush();
                     os.close();
+
+                    if (Objects.equals(String.valueOf(conn.getResponseCode()), "200")) {
+                        Toast.makeText(globalContext, "Document was succesfully signed!", Toast.LENGTH_LONG).show();
+                    }
 
                     Log.i("STATUS", String.valueOf(conn.getResponseCode()));
                     Log.i("MSG" , conn.getResponseMessage());

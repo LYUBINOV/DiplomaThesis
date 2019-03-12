@@ -90,6 +90,6 @@ public class FingerprintCommandHandler extends FingerprintManager.Authentication
         ServerCommandHandler serverCommandHandler = new ServerCommandHandler();
 
         serverCommandHandler.getDatabaseCursor(context); //Init
-        serverCommandHandler.checkGeneratedKeysInDatabase(context, this.targetFile);
+        serverCommandHandler.checkGeneratedKeysInDatabase(this.targetFile);
     }
 }
