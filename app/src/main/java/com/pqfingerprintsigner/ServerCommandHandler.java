@@ -124,6 +124,7 @@ public class ServerCommandHandler {
 
     private Map<String, byte[]> generateSphincsKeys() {
         //SPHINCS TESTING - implementacia https://github.com/bcgit/bc-java/tree/master/core/src/main/java/org/bouncycastle/pqc/crypto/sphincs
+        //https://github.com/bcgit/bc-java/blob/master/core/src/main/java/org/bouncycastle/pqc/crypto/sphincs/SPHINCS256Signer.java riadok 185 byte[] crypto_sign(HashFunctions hs, byte[] m, byte[] sk) tu sa deje cely podpis
         SPHINCS256KeyPairGenerator generator = new SPHINCS256KeyPairGenerator();
         generator.init(new SPHINCS256KeyGenerationParameters(new SecureRandom(), new SHA3Digest(256)));
 
