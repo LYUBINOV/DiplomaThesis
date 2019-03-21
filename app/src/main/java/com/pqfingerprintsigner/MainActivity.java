@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
         listPdfsView.setAdapter(adapter);
     }
 
-    public void searchPdfs(File dir) {
+    protected void searchPdfs(File dir) {
         String pdfPattern = ".pdf";
         File fileList[] = dir.listFiles();
 

@@ -35,7 +35,7 @@ import javax.crypto.SecretKey;
 
 public class FingerprintActivity extends AppCompatActivity {
     private KeyStore keyStore;
-    private static final String KEY_NAME = "SPHINCS"; //TODO: vymyslet rozumny nazov pre key
+    private static final String KEY_NAME = "SPHINCS"; //TODO: vymyslet rozumny nazov pre key, //popripade .getApplicationName()
     private SecretKey key;
     private Cipher cipher;
 
