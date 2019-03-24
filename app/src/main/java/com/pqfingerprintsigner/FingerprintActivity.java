@@ -14,8 +14,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.TextView;
 
-import org.w3c.dom.Text;
-
 import java.io.File;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
@@ -38,6 +36,8 @@ public class FingerprintActivity extends AppCompatActivity {
     private static final String KEY_NAME = "SPHINCS"; //TODO: vymyslet rozumny nazov pre key, //popripade .getApplicationName()
     private SecretKey key;
     private Cipher cipher;
+
+    private FingerprintCommandHandler fingerprintCommandHandler;
 
     private TextView errorText;
 
@@ -92,8 +92,13 @@ public class FingerprintActivity extends AppCompatActivity {
 
                         if (cipherInit()) {
                             FingerprintManager.CryptoObject cryptoObject = new FingerprintManager.CryptoObject(cipher);
-                            FingerprintCommandHandler helper = new FingerprintCommandHandler(this);
-                            helper.startAuth(fingerprintManager, cryptoObject, key, new File(this.filePath));
+                            fingerprintCommandHandler = new FingerprintCommandHandler(this);
+                            fingerprintCommandHandler.startAuth(fingerprintManager, cryptoObject, key, new File(this.filePath));
+                        }
+                        else {
+                        	//App killing if needed - obj sa nepodarilo inicializovat
+            				android.os.Process.killProcess(android.os.Process.myPid());
+            				System.exit(1);
                         }
                     }
                 }
@@ -131,7 +136,7 @@ public class FingerprintActivity extends AppCompatActivity {
     }
 
     @TargetApi(Build.VERSION_CODES.M)
-    public boolean cipherInit() {
+    protected boolean cipherInit() {
         try {
             cipher = Cipher.getInstance(KeyProperties.KEY_ALGORITHM_AES + "/" + KeyProperties.BLOCK_MODE_CBC + "/" + KeyProperties.ENCRYPTION_PADDING_PKCS7);
         }

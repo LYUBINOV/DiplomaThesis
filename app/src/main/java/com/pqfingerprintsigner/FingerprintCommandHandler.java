@@ -1,13 +1,9 @@
 package com.pqfingerprintsigner;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.hardware.fingerprint.FingerprintManager;
 import android.os.CancellationSignal;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.widget.TextView;
 
@@ -26,6 +22,8 @@ public class FingerprintCommandHandler extends FingerprintManager.Authentication
     private static SecretKey fingerprintKey;
     private File targetFile;
 
+    private ServerCommandHandler serverCommandHandler;
+
     public FingerprintCommandHandler(Context mContext) {
         context = mContext;
     }
@@ -33,9 +31,9 @@ public class FingerprintCommandHandler extends FingerprintManager.Authentication
     public void startAuth(FingerprintManager manager, FingerprintManager.CryptoObject cryptoObject, SecretKey key, File targetFile) {
         CancellationSignal cancellationSignal = new CancellationSignal();
 
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.USE_FINGERPRINT) != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
+        // if (ActivityCompat.checkSelfPermission(context, Manifest.permission.USE_FINGERPRINT) != PackageManager.PERMISSION_GRANTED) {
+        //     return;
+        // }
 
         fingerprintCryptoObject = cryptoObject;
         fingerprintKey = key;

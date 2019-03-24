@@ -1,15 +1,14 @@
 package com.pqfingerprintsigner;
 
 import android.content.Intent;
-import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.widget.Toast;
 
 import com.github.barteksc.pdfviewer.PDFView;
+
 import java.io.File;
 
 public class PDFViewActivity extends AppCompatActivity
