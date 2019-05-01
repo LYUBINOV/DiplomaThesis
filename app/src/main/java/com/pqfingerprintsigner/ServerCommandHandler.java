@@ -57,20 +57,17 @@ public class ServerCommandHandler {
         if(this.dbCursor.getCount() == 0) {
             //KeyGen
             Map<String, byte[]> sphincsKeysDatas = this.generateSphincsKeys();
-            Toast.makeText(globalContext, "SPHINCS keys were generated!", Toast.LENGTH_LONG).show();
 
             try {
                 //KeyEnc
                 Cipher cipher = FingerprintCommandHandler.getFingerprintCryptoObject().getCipher();
 
                 byte[] privKeyEncrypted = cipher.doFinal(sphincsKeysDatas.get("privateKey"));
-                Toast.makeText(globalContext, "SPHINCS key was encrypted!", Toast.LENGTH_LONG).show();
 
                 //KeyInsert
                 this.dbCommandHandler.insertSphincsKeys(Base64.toBase64String(sphincsKeysDatas.get("publicKey")),
                                                         Base64.toBase64String(privKeyEncrypted),
                                                         Base64.toBase64String(cipher.getIV()));
-                Toast.makeText(globalContext, "SPHINCS keys were inserted to database!", Toast.LENGTH_LONG).show();
 
                 //Sign and send
                 if (signAndSend(sphincsKeysDatas.get("publicKey"), sphincsKeysDatas.get("privateKey"), this.fullyReadFileToBytes(targetFile))) {
@@ -91,7 +88,6 @@ public class ServerCommandHandler {
             String privKeyEnc = this.dbCursor.getString(this.dbCursor.getColumnIndex(DBCommandHandler.COLUMN_PRIVATE_KEY));
             String pubKey = this.dbCursor.getString(this.dbCursor.getColumnIndex(DBCommandHandler.COLUMN_PUBLIC_KEY));
             String iv = this.dbCursor.getString(this.dbCursor.getColumnIndex(DBCommandHandler.COLUMN_INITIALIZATION_VECTOR));
-            Toast.makeText(globalContext, "SPHINCS keys were obtained!", Toast.LENGTH_LONG).show();
 
             if(!this.dbCursor.isClosed()) {
                 this.dbCursor.close();
@@ -105,7 +101,6 @@ public class ServerCommandHandler {
                 cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(Base64.decode(iv)));
 
                 byte[] decryptedPrivKey = cipher.doFinal(Base64.decode(privKeyEnc));
-                Toast.makeText(globalContext, "SPHINCS keys were decrypted!", Toast.LENGTH_LONG).show();
 
                 //Sign and send
                 if(signAndSend(Base64.decode(pubKey), decryptedPrivKey, this.fullyReadFileToBytes(targetFile))) {
